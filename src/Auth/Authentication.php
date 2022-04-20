@@ -13,6 +13,15 @@ class Authentication {
     private $_protocol;
     private $_redirect_uri;
 
+    /**
+    * @author   Carl
+    * @version  1.0
+    * @param string $app_id
+    * @param string $app_secret
+    * @param string $app_host      用户池域名，示例：https://xxxx.bitanswer.cn
+    * @param string $protocol      协议，目前仅支持 “oidc”
+    * @param string $redirect_uri  回调地址，必须包含在app的地址配置里
+    */
     function __construct($app_id, $app_secret, $app_host, $protocol, $redirect_uri = null) {
         $this->_app_id = $app_id;
         $this->_app_secret = $app_secret;
@@ -21,6 +30,13 @@ class Authentication {
         $this->_redirect_uri = $redirect_uri;
     }
 
+    /**
+    * 获取认证地址
+    * @author   Carl
+    * @version  1.0
+    * @return string url
+    * @throws Exception
+    */
     function getAuthorizeUrl(array $options = []) {
         if ($this->_protocol == 'oidc') {
             return $this->getAuthorizeOidcUrl($options);
@@ -28,6 +44,13 @@ class Authentication {
         throw new Exception('Not support protocol');
     }
 
+    /**
+    * 获取登出地址
+    * @author   Carl
+    * @version  1.0
+    * @return string url
+    * @throws Exception
+    */
     function getLogoutUrl(array $options = []) {
         if ($this->_protocol == 'oidc') {
             return $this->getOidcLogoutUrl($options);
@@ -35,6 +58,14 @@ class Authentication {
         throw new Exception('Not support protocol');
     }
 
+    /**
+    * 获取accessToken
+    * @author   Carl
+    * @version  1.0
+    * @param string $code  由授权服务器返回   
+    * @return json
+    * @throws Exception
+    */
     function getAccessTokenByCode($code) {
         if (empty($this->_app_secret)) {
             throw new Exception('Not found secret');
@@ -48,6 +79,14 @@ class Authentication {
         throw new Exception('Not support protocol');
     }
 
+    /**
+    * 获取用户信息
+    * @author   Carl
+    * @version  1.0
+    * @param string $access_token   
+    * @return json
+    * @throws Exception
+    */
     function getBitUserInfo($access_token) {
         if ($this->_protocol != 'oidc') {
             throw new Exception('Not support protocol');
@@ -55,6 +94,14 @@ class Authentication {
         return $this->getBitUserInfoByOidc($access_token);
     }
 
+    /**
+    * 更新用户信息
+    * @author   Carl
+    * @version  1.0
+    * @param string $access_token 
+    * @param array $param
+    * @throws Exception
+    */
     function bitUpdateUser($access_token, $param) {
         if ($this->_protocol != 'oidc') {
             throw new Exception('Not support protocol');
@@ -79,6 +126,12 @@ class Authentication {
         });
     }
 
+    /**
+    * 更新用户密码
+    * @author   Carl
+    * @version  1.0
+    * @throws Exception
+    */
     function bitUpdatePassword($access_token, $old_password, $new_password) {
         if ($this->_protocol != 'oidc') {
             throw new Exception('Not support protocol');
@@ -97,6 +150,12 @@ class Authentication {
         });
     }
 
+    /**
+    * 更新用户邮箱
+    * @author   Carl
+    * @version  1.0
+    * @throws Exception
+    */
     function bitUpdateEmail($access_token, $email) {
         if ($this->_protocol != 'oidc') {
             throw new Exception('Not support protocol');
