@@ -216,7 +216,7 @@ class Authentication {
         return $this->_app_host . '/oidc/logout';
     }
 
-    function getBitUserInfoByOidc($access_token) {
+    private function getBitUserInfoByOidc($access_token) {
         $url = $this->_app_host . '/oidc/bit/user';
         $http = new Http($url);
         $http->setContentType('application/x-www-form-urlencoded');
@@ -226,7 +226,7 @@ class Authentication {
         });
     }
 
-    static function checkResult(Http $http, $fun) {
+    private static function checkResult(Http $http, $fun) {
         try {
             $response = $fun();
             if (empty($response)) {
