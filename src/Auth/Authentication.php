@@ -185,7 +185,7 @@ class Authentication {
             'redirect_uri' => $this->_redirect_uri
         ];
         foreach ($map as $item) {
-            if (!empty($option) && key_exists($item, $option)) {
+            if (!empty($options) && key_exists($item, $options)) {
                 if ($item == 'scope' && strpos($options[$item], 'offline_access')) {
                     $param['prompt'] = 'consent';
                 }
