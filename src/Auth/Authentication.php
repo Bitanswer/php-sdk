@@ -174,7 +174,7 @@ class Authentication {
     }
 
     private function getAuthorizeOidcUrl(array $options = []) {
-        $map = ['client_id', 'scope', 'state', 'nonce', 'response_mode', 'response_type', 'redirect_uri', 'code_challenge', 'code_challenge_method'];
+        $map = ['client_id', 'scope', 'state', 'nonce', 'response_mode', 'response_type', 'redirect_uri', 'code_challenge', 'code_challenge_method', 'ui_locales'];
         $param = [
             'nonce' => substr(rand(0, 9999) . '', 0, 4),
             'state' => substr(rand(0, 9999) . '', 0, 4),
@@ -182,6 +182,7 @@ class Authentication {
             'client_id' => $this->_app_id,
             'response_mode' => 'query',
             'response_type' => 'code',
+            'ui_locales' => 'zh_CN en',
             'redirect_uri' => $this->_redirect_uri
         ];
         foreach ($map as $item) {
