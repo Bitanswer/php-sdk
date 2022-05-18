@@ -12,6 +12,7 @@ class Authentication {
     private $_app_host;
     private $_protocol;
     private $_redirect_uri;
+    private $_post_logout_redirect_uri;
 
     /**
     * @author   Carl
@@ -22,12 +23,16 @@ class Authentication {
     * @param string $protocol      协议，目前仅支持 “oidc”
     * @param string $redirect_uri  回调地址，必须包含在app的地址配置里
     */
-    function __construct($app_id, $app_secret, $app_host, $protocol, $redirect_uri = null) {
+    function __construct($app_id, $app_secret, $app_host, $protocol, $redirect_uri = null, $option = []) {
         $this->_app_id = $app_id;
         $this->_app_secret = $app_secret;
         $this->_app_host = $app_host;
         $this->_protocol = $protocol;
         $this->_redirect_uri = $redirect_uri;
+ 
+        if (key_exists('post_logout_redirect_uri', $option)) {
+            $this->_post_logout_redirect_uri = $option['post_logout_redirect_uri'];
+        }
     }
 
     /**
@@ -213,8 +218,25 @@ class Authentication {
     }
 
     private function getOidcLogoutUrl(array $options = []) {
-        // Support redirect_uri
-        return $this->_app_host . '/oidc/logout';
+        $param = [
+            'id_token_hint' => NULL,
+            'logout_hint' => NULL,
+            'client_id' => $this->_app_id,
+            'post_logout_redirect_uri' => $this->_post_logout_redirect_uri,
+            'state' => substr(rand(0, 9999) . '', 0, 4),
+            'ui_locales' => 'zh_CN en'
+        ];
+        foreach ($options as $key => $val) {
+            if (key_exists($key, $param)) {
+                $param[$key] = $val;
+            }
+        }
+        foreach ($param as $key => $val) {
+            if ($val === NULL) {
+                unset($param[$key]);
+            }
+        }
+        return $this->_app_host . '/oidc/end_session_endpoint?' . http_build_query($param);
     }
 
     private function getBitUserInfoByOidc($access_token) {
