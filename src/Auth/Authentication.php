@@ -178,6 +178,52 @@ class Authentication {
         });
     }
 
+    /**
+    * 获取登录Session
+    * @author   Carl
+    * @version  1.0
+    * @throws Exception
+    */
+    function getBitSessionList($access_token) {
+        $url = $this->_app_host . '/oidc/bit/session';
+        $http = new Http($url);
+
+        $data = [
+            'access_token' => $access_token
+        ];
+        return $this->checkResult($http, function() use ($http, $data) {
+            return $http->post($data);
+        });
+    }
+
+    /**
+    * 踢出帐号下的Session
+    * @author   Carl
+    * @version  1.0
+    * @param string $bit_type      踢出类型。device:按设备踢出,account:按帐号踢出，application:按应用踢出，device_app:踢出设备上的app
+    * @param string $credential_index  设备编号
+    * @param string $app_guid  应用的guid  
+    * @throws Exception
+    */
+    function bitSessionEnd($access_token, $bit_type, $credential_index = NULL, $app_guid = NULL) {
+        $url = $this->_app_host . '/oidc/bit/session/end';
+        $http = new Http($url);
+        
+        $data = [
+            'access_token' => $access_token,
+            'bit_type' => $bit_type
+        ];
+        if (!empty($credential_index)) {
+            $data['credential_index'] = $credential_index;
+        }
+        if (!empty($app_guid)) {
+            $data['app_guid'] = $app_guid;
+        }
+        return $this->checkResult($http, function() use ($http, $data) {
+            return $http->post($data);
+        });
+    }
+
     private function getAuthorizeOidcUrl(array $options = []) {
         $map = ['client_id', 'scope', 'state', 'nonce', 'response_mode', 'response_type', 'redirect_uri', 'code_challenge', 'code_challenge_method', 'ui_locales'];
         $param = [
