@@ -247,6 +247,23 @@ class Authentication {
         return $this->_app_host . '/oidc/auth?' . http_build_query($param);
     }
 
+    /**
+    * 获取账号下的app
+    * @author   Rick
+    * @version  1.0
+    * @throws Exception
+    */
+    function getBitApplication($access_token) {
+        $url = $this->_app_host . '/oidc/bit/products';
+        $http = new Http($url);
+        $http->setContentType('application/x-www-form-urlencoded');
+
+        $data = [ 'access_token' => $access_token ];
+        return $this->checkResult($http, function() use ($http, $data) {
+            return $http->post($data);
+        });
+    }
+
     private function getOidcAccessTokenByCode($code) {
         $param = [
             'client_id' => $this->_app_id,
