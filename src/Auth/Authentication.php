@@ -197,15 +197,75 @@ class Authentication {
     }
 
     /**
+    * 绑定身份源
+    * @author   Carl
+    * @version  1.0
+    * @param string $access_token
+    * @param string $identity_provider 身份源guid
+    * @param string $identity_token 身份token
+    * @throws Exception
+    */
+    function bindIdentityProvider($access_token, $identity_provider, $identity_token, $nickname) {
+        $url = $this->_app_host . '/oidc/bit/bind-identity-provider';
+        $http = new Http($url);
+        $data = [
+            'access_token' => $access_token,
+            'identity_provider' => $identity_provider,
+            'identity_token' => $identity_token,
+            'nickname' => $nickname
+        ];
+        return $this->checkResult($http, function() use ($http, $data) {
+            return $http->post($data);
+        });
+    }
+
+    /**
+    * 绑定身份源
+    * @author   Carl
+    * @version  1.0
+    * @param string $access_token
+    * @param string $identity_provider 身份源guid
+    * @throws Exception
+    */
+    function unBindIdentityProvider($access_token, $identity_provider) {
+        $url = $this->_app_host . '/oidc/bit/unbind-identity-provider';
+        $http = new Http($url);
+        $data = [
+            'access_token' => $access_token,
+            'identity_provider' => $identity_provider
+        ];
+        return $this->checkResult($http, function() use ($http, $data) {
+            return $http->post($data);
+        });
+    }
+
+    /**
+    * 获取已绑定的身份源
+    * @author   Carl
+    * @version  1.0
+    * @param string $access_token
+    * @throws Exception
+    */
+    function getFederatedIdentity($access_token) {
+        $url = $this->_app_host . '/oidc/bit/federated-identities';
+        $http = new Http($url);
+        $data = [ 'access_token' => $access_token ];
+        $result = $this->checkResult($http, function() use ($http, $data) {
+            return $http->post($data);
+        });
+        return $result['list'];
+    }
+
+    /**
     * 踢出帐号下的Session
     * @author   Carl
     * @version  1.0
     * @param string $bit_type      踢出类型。device:按设备踢出,account:按帐号踢出，application:按应用踢出，device_app:踢出设备上的app
-    * @param string $credential_index  设备编号
+    * @param string $device_index  设备编号
     * @param string $app_guid  应用的guid  
     * @throws Exception
     */
-    function bitSessionEnd($access_token, $bit_type, $credential_index = NULL, $app_guid = NULL) {
+    function bitSessionEnd($access_token, $bit_type, $device_index = NULL, $app_guid = NULL) {
         $url = $this->_app_host . '/oidc/bit/session/end';
         $http = new Http($url);
         
@@ -213,8 +273,8 @@ class Authentication {
             'access_token' => $access_token,
             'bit_type' => $bit_type
         ];
-        if (!empty($credential_index)) {
-            $data['credential_index'] = $credential_index;
+        if (!empty($device_index)) {
+            $data['device_index'] = $device_index;
         }
         if (!empty($app_guid)) {
             $data['app_guid'] = $app_guid;
@@ -222,29 +282,6 @@ class Authentication {
         return $this->checkResult($http, function() use ($http, $data) {
             return $http->post($data);
         });
-    }
-
-    private function getAuthorizeOidcUrl(array $options = []) {
-        $map = ['client_id', 'scope', 'state', 'nonce', 'response_mode', 'response_type', 'redirect_uri', 'code_challenge', 'code_challenge_method', 'ui_locales'];
-        $param = [
-            'nonce' => substr(rand(0, 9999) . '', 0, 4),
-            'state' => substr(rand(0, 9999) . '', 0, 4),
-            'scope' => 'openid profile email phone address',
-            'client_id' => $this->_app_id,
-            'response_mode' => 'query',
-            'response_type' => 'code',
-            'ui_locales' => 'zh_CN en',
-            'redirect_uri' => $this->_redirect_uri
-        ];
-        foreach ($map as $item) {
-            if (!empty($options) && key_exists($item, $options)) {
-                if ($item == 'scope' && strpos($options[$item], 'offline_access')) {
-                    $param['prompt'] = 'consent';
-                }
-                $param[$item] = $options[$item];
-            }
-        }
-        return $this->_app_host . '/oidc/auth?' . http_build_query($param);
     }
 
     /**
@@ -262,6 +299,30 @@ class Authentication {
         return $this->checkResult($http, function() use ($http, $data) {
             return $http->post($data);
         });
+    }
+
+    private function getAuthorizeOidcUrl(array $options = []) {
+        $map = ['client_id', 'scope', 'state', 'nonce', 'response_mode', 'response_type', 'redirect_uri', 'code_challenge', 'code_challenge_method', 'ui_locales', 'prompt'];
+        $param = [
+            'nonce' => substr(rand(0, 9999) . '', 0, 4),
+            'state' => substr(rand(0, 9999) . '', 0, 4),
+            'scope' => 'openid profile email phone address',
+            'client_id' => $this->_app_id,
+            'response_mode' => 'query',
+            'response_type' => 'code',
+            'ui_locales' => 'zh_CN en',
+            'redirect_uri' => $this->_redirect_uri,
+            'prompt' => 'none'
+        ];
+        foreach ($map as $item) {
+            if (!empty($options) && key_exists($item, $options)) {
+                if ($item == 'scope' && strpos($options[$item], 'offline_access')) {
+                    $param['prompt'] = 'consent';
+                }
+                $param[$item] = $options[$item];
+            }
+        }
+        return $this->_app_host . '/oidc/auth?' . http_build_query($param);
     }
 
     private function getOidcAccessTokenByCode($code) {
