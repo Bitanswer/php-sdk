@@ -122,18 +122,20 @@ class Authentication {
      * @return json
      * @throws Exception
      */
-    function getAccessTokenByPassword($username, $password) {
+    function getAccessTokenByPassword($username, $password, array $options = []) {
         if (empty($this->_app_id)) {
             throw new Exception('Not found appid');
         }
         if ($this->_protocol == 'oidc') {
-            $param = [
+            $def_param = [
                 'client_id' => $this->_app_id,
                 'client_secret' => $this->_app_secret,
                 'grant_type' => 'password',
                 'username' => $username,
-                'password' => $password
+                'password' => $password,
+                'scope' => 'openid'
             ];
+            $param = array_merge($def_param, $options);
 
             $url = $this->_app_host . '/oidc/token';
             $http = new Http($url);
