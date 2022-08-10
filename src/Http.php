@@ -105,7 +105,7 @@ class Http {
             $http_info = curl_getinfo($ch);
             $this->_http_info = $http_info;
             if (empty($http_info['http_code']) || !in_array($http_info['http_code'], [200, 201])) {
-                throw new Exception("http error, code:{$http_info['http_code']}, url: {$http_info['url']}, result: {$result}", $http_info['http_code']);
+                throw new Exception("http error, code:{$http_info['http_code']}, result: {$result}", $http_info['http_code']);
             }
             return $result;
         } catch (Exception $e) {
