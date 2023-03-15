@@ -72,9 +72,7 @@ class Http {
         }
 
         $opts[CURLOPT_URL] = $url;
-        if (!empty($data)) {
-            $opts[CURLOPT_POSTFIELDS] = $data;
-        }
+        $opts[CURLOPT_POSTFIELDS] = $data;
         $opts[CURLOPT_CUSTOMREQUEST] = $method;
         
         $opts[CURLOPT_CONNECTTIMEOUT_MS] = 3000;
@@ -119,7 +117,7 @@ class Http {
         return $this->send('get', $data);
     }
 
-    function post($data) {
+    function post($data = []) {
         return $this->send('post', $data);
     }
 

@@ -184,11 +184,11 @@ class Authentication {
         if (empty($data)) {
             throw new Exception('Not found data');
         }
-        $data['access_token'] = $access_token;
 
         $url = $this->_app_host . '/oidc/bit/user/update';
         $http = new Http($url);
         $http->setContentType('application/x-www-form-urlencoded');
+        $http->setHeader(['Authorization' => 'bearer ' . $access_token]);
         return $this->checkResult($http, function () use ($http, $data) {
                     return $http->post($data);
                 });
@@ -205,7 +205,6 @@ class Authentication {
             throw new Exception('Not support protocol');
         }
         $data = [
-            'access_token' => $access_token,
             'old' => $old_password,
             'new' => $new_password
         ];
@@ -213,6 +212,7 @@ class Authentication {
         $url = $this->_app_host . '/oidc/bit/user/update/password';
         $http = new Http($url);
         $http->setContentType('application/x-www-form-urlencoded');
+        $http->setHeader(['Authorization' => 'bearer ' . $access_token]);
         return $this->checkResult($http, function () use ($http, $data) {
                     return $http->post($data);
                 });
@@ -229,13 +229,13 @@ class Authentication {
             throw new Exception('Not support protocol');
         }
         $data = [
-            'access_token' => $access_token,
             'email' => $email
         ];
 
         $url = $this->_app_host . '/oidc/bit/user/update/email';
         $http = new Http($url);
         $http->setContentType('application/x-www-form-urlencoded');
+        $http->setHeader(['Authorization' => 'bearer ' . $access_token]);
         return $this->checkResult($http, function () use ($http, $data) {
                     return $http->post($data);
                 });
@@ -251,11 +251,9 @@ class Authentication {
         $url = $this->_app_host . '/oidc/bit/session';
         $http = new Http($url);
 
-        $data = [
-            'access_token' => $access_token
-        ];
-        return $this->checkResult($http, function () use ($http, $data) {
-                    return $http->post($data);
+        $http->setHeader(['Authorization' => 'bearer ' . $access_token]);
+        return $this->checkResult($http, function () use ($http) {
+                    return $http->post();
                 });
     }
 
@@ -272,11 +270,11 @@ class Authentication {
         $url = $this->_app_host . '/oidc/bit/bind-identity-provider';
         $http = new Http($url);
         $data = [
-            'access_token' => $access_token,
             'identity_provider' => $identity_provider,
             'identity_token' => $identity_token,
             'nickname' => $nickname
         ];
+        $http->setHeader(['Authorization' => 'bearer ' . $access_token]);
         return $this->checkResult($http, function() use ($http, $data) {
             return $http->post($data);
         });
@@ -294,9 +292,9 @@ class Authentication {
         $url = $this->_app_host . '/oidc/bit/unbind-identity-provider';
         $http = new Http($url);
         $data = [
-            'access_token' => $access_token,
             'identity_provider' => $identity_provider
         ];
+        $http->setHeader(['Authorization' => 'bearer ' . $access_token]);
         return $this->checkResult($http, function() use ($http, $data) {
             return $http->post($data);
         });
@@ -312,9 +310,10 @@ class Authentication {
     function getFederatedIdentity($access_token) {
         $url = $this->_app_host . '/oidc/bit/federated-identities';
         $http = new Http($url);
-        $data = [ 'access_token' => $access_token ];
-        $result = $this->checkResult($http, function() use ($http, $data) {
-            return $http->post($data);
+        
+        $http->setHeader(['Authorization' => 'bearer ' . $access_token]);
+        $result = $this->checkResult($http, function() use ($http) {
+            return $http->post();
         });
         return $result['list'];
     }
@@ -358,16 +357,16 @@ class Authentication {
         $http = new Http($url);
         $http->setContentType('application/x-www-form-urlencoded');
 
-        $data = [ 'access_token' => $access_token ];
-        return $this->checkResult($http, function() use ($http, $data) {
-            return $http->post($data);
+        $http->setHeader(['Authorization' => 'bearer ' . $access_token]);
+        return $this->checkResult($http, function() use ($http) {
+            return $http->post();
         });
     }
 
     private function getAuthorizeOidcUrl(array $options = []) {
         $map = ['client_id', 'scope', 'state', 'nonce', 'response_mode', 'response_type',
                 'redirect_uri', 'code_challenge', 'code_challenge_method', 'ui_locales', 'prompt',
-                'audience'];
+                'audience', 'bit_auth_type'];
         $param = [
             'nonce' => substr(rand(0, 9999) . '', 0, 4),
             'state' => substr(rand(0, 9999) . '', 0, 4),
@@ -398,12 +397,15 @@ class Authentication {
             'grant_type' => 'authorization_code',
             'code' => $code
         ];
-
+        if (!empty($this->_redirect_uri)) {
+            $param['redirect_uri'] = $this->_redirect_uri;
+        }
         $url = $this->_app_host . '/oidc/token';
         $http = new Http($url);
         $http->setContentType('application/x-www-form-urlencoded');
         return $this->checkResult($http, function () use ($http, $param) {
-                    return $http->post($param);
+            $res = $http->post($param);
+                    return $res;
                 });
     }
 
